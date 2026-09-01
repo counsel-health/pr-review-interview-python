@@ -26,7 +26,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.clock import now_ms
 from app.db import Querier, one, query, tx
-from app.dto import ApiThread, ThreadMetadata, UserRole
+from app.dto import ApiThread, ThreadMetadata
 from app.schema import messages, threads, threads_physicians
 from app.users import resolve_role
 
@@ -220,18 +220,3 @@ async def set_thread_metadata(thread_id: str, metadata: ThreadMetadata) -> None:
         .where(threads.c.id == thread_id)
         .values(metadata=metadata.model_dump())
     )
-
-
-async def record_message_for_metadata(thread_id: str, role: UserRole) -> None:
-    """
-    Update a thread's unresponded-patient counter after a new message.
-
-    Patient messages increment the count; a physician reply resets it to 0.
-    This is the only place the counter moves — see docs/PRODUCT.md, "Inbound
-    and the work queue".
-    """
-    metadata = await get_thread_metadata(thread_id)
-    metadata.unrespondedPatientMessagesCount = (
-        metadata.unrespondedPatientMessagesCount + 1 if role == "patient" else 0
-    )
-    await set_thread_metadata(thread_id, metadata)
