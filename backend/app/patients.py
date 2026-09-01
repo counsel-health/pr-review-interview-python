@@ -26,3 +26,15 @@ async def list_patients() -> list[ApiUser]:
 async def get_patient_by_id(patient_id: str) -> ApiUser | None:
     row = await one(SELECT_PATIENT.where(patients.c.id == patient_id))
     return to_user(row) if row else None
+
+
+async def get_patient_by_phone(phone: str) -> ApiUser | None:
+    """
+    Resolve the patient registered at a given phone number.
+
+    Used by the inbound Relay webhook to map an inbound message's ``from``
+    address to a patient. Returns None when no patient is registered at that
+    number.
+    """
+    row = await one(SELECT_PATIENT.where(patients.c.phone == phone))
+    return to_user(row) if row else None

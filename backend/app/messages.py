@@ -12,13 +12,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from pydantic import BaseModel
 from sqlalchemy import func, insert, select
 
 from app.clock import now_ms
 from app.db import one, query
 from app.dto import ApiMessage, UserRole
+from app.jobs.queue import send_message as enqueue_job
 from app.schema import messages
-from app.threads import record_message_for_metadata
+from app.threads import get_thread_metadata, set_thread_metadata
 from app.users import resolve_role
 
 MESSAGE_COLUMNS = (
@@ -110,13 +112,21 @@ async def append_message(
     return to_api(row)
 
 
-async def send_message(thread_id: str, user_id: str, text: str) -> ApiMessage:
+class SendMessageResult(BaseModel):
+    """The inserted message, plus the thread's unread count after it landed."""
+
+    message: ApiMessage
+    unreadCount: int
+
+
+async def send_message(thread_id: str, user_id: str, text: str) -> SendMessageResult:
     """
     Send a message to a thread on behalf of a user.
 
     Resolves the author's role (patient vs physician) before delegating to
-    :func:`append_message`. This is the orchestration the UI calls into via the
-    REST layer.
+    :func:`append_message`, then runs the shared side-effect hook so the in-app
+    and webhook paths behave identically. This is the orchestration the UI calls
+    into via the REST layer.
 
     Not to be confused with ``app.jobs.queue.send_message``, which enqueues a
     background job. This one is a chat message.
@@ -128,6 +138,35 @@ async def send_message(thread_id: str, user_id: str, text: str) -> ApiMessage:
         author_role=role,
         text=text,
     )
-    # Patient messages bump the unresponded counter; a physician reply clears it.
-    await record_message_for_metadata(thread_id, role)
-    return message
+    unread_count = await on_message_appended(thread_id, message.model_dump())
+    # Hand the caller the message together with the thread's updated unread count.
+    return SendMessageResult(message=message, unreadCount=unread_count)
+
+
+async def on_message_appended(thread_id: str, message: Mapping[str, Any]) -> int:
+    """
+    Shared "a message was appended" hook.
+
+    Called by both the in-app send path and the inbound Relay webhook so
+    message side-effects live in one place instead of being duplicated: bump
+    the unread counter, kick off a fresh summary, and notify the care team.
+
+    ``message`` is the appended message in its :class:`ApiMessage` shape; only
+    its ``id`` is read here, to tell the notification job which message landed.
+    Returns the thread's unread count after the bump.
+    """
+    # A new message landed, so the thread is unread for the care team again and
+    # the response clock restarts. Read the current count, add one, write it back.
+    metadata = await get_thread_metadata(thread_id)
+    metadata.unrespondedPatientMessagesCount += 1
+    await set_thread_metadata(thread_id, metadata)
+
+    # Queue a fresh summary for the thread now that it has a new message.
+    await enqueue_job("refresh_summary", {"threadId": thread_id})
+
+    # Ping the care team about the new message.
+    await enqueue_job(
+        "notify_care_team", {"threadId": thread_id, "messageId": message["id"]}
+    )
+
+    return metadata.unrespondedPatientMessagesCount

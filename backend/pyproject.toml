@@ -21,6 +21,8 @@ run-worker = "app.jobs.worker:main"
 db-reset = "scripts.db_reset:main"
 sanity-test = "scripts.sanity_test:main"
 build-seed = "scripts.build_seed:main"
+backfill-summaries = "scripts.backfill_summaries:main"
+relay-send = "scripts.relay_send:main"
 
 [dependency-groups]
 dev = [
