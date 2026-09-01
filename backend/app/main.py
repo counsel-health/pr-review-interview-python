@@ -23,7 +23,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api import health, messages, threads, users
+from app.api import health, inbox, messages, threads, users, webhooks
 from app.api.errors import install_error_handlers
 from app.config import run_worker_in_api_server
 from app.db import dispose_engine
@@ -72,4 +72,6 @@ install_error_handlers(app)
 app.include_router(users.router, prefix="/api")
 app.include_router(threads.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
+app.include_router(inbox.router, prefix="/api")
+app.include_router(webhooks.router, prefix="/api")
 app.include_router(health.router, prefix="/api")
