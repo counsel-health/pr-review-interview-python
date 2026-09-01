@@ -29,6 +29,8 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from app.db import dispose_engine
+from app.jobs.handlers.notify_care_team import handle_notify_care_team
+from app.jobs.handlers.refresh_summary import handle_refresh_summary
 from app.jobs.handlers.summarize_thread import handle_summarize_thread
 from app.jobs.queue import (
     ReceivedJob,
@@ -45,6 +47,8 @@ JobHandler = Callable[[Any], Awaitable[None]]
 #: handler. Add new job types here.
 HANDLERS: dict[str, JobHandler] = {
     "summarize_thread": handle_summarize_thread,
+    "refresh_summary": handle_refresh_summary,
+    "notify_care_team": handle_notify_care_team,
 }
 
 BATCH_SIZE = 5
