@@ -1,0 +1,44 @@
+[project]
+name = "counsel-backend"
+version = "0.1.0"
+description = "Counsel patient/care-team messaging API"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=6.1,<6.2",
+    "djangorestframework>=3.18,<3.19",
+    "psycopg[binary]>=3.2",
+    # Embedded PostgreSQL: ships real Postgres binaries as a wheel so a fresh
+    # checkout needs no system Postgres install. See counsel/db.py.
+    "pgembed>=0.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.14",
+    "django-stubs[compatible-mypy]>=5.1",
+    "djangorestframework-stubs>=3.15",
+]
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ["mypy_django_plugin.main"]
+mypy_path = "."
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+exclude = ['(^|/)migrations/']
+
+# pgembed synthesizes its `initdb`/`pg_ctl`/... wrappers at import time, so
+# they are invisible to static analysis. Treat the package as untyped.
+[[tool.mypy.overrides]]
+module = ["pgembed", "pgembed.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[tool.django-stubs]
+django_settings_module = "counsel.settings"

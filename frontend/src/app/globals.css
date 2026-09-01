@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Content */
+    --content-primary: 192 14% 7%;
+    --content-accent: 191 76% 31%;
+    --content-secondary: 191 13% 35%;
+    --content-tertiary: 190 12% 41%;
+    --content-disabled: 192 14% 64%;
+    --content-onDark: 0 0% 100%;
+
+    /* Button */
+    --button-primary-background: 191 76% 31%;
+    --button-primary-content: 0 0% 100%;
+    --button-secondary-background: 192 20% 95%;
+    --button-secondary-content: 192 14% 7%;
+    --button-disabled-background: 192 20% 95%;
+    --button-disabled-content: 192 14% 64%;
+    --button-tiny-close-background: 192 14% 7%;
+    --button-tiny-close-content: 0 0% 100%;
+
+    /* Utility */
+    --negative: 352 78% 51%;
+    --positive: 136 81% 44%;
+    --warning: 43 96% 58%;
+
+    /* Border */
+    --border: 194 18% 86%;
+    --border-onLight: 192 14% 7%;
+    --border-onDark: 0 0% 100%;
+
+    /* Brand */
+    --brand-teal: 191 76% 31%;
+    --brand-teal-deemph: #e0f6fb;
+    --brand-orange: 26 86% 53%;
+    --brand-orange-deemph: #f8caa6;
+    --brand-purple: #812a84;
+    --brand-purple-deemph: #f6e5f7;
+
+    /* Background  */
+    --background-surface: #ffffff;
+    --background-inset: #f0f4f5;
+
+    /* Bubble */
+    --bubble-patient-background: 191 34% 76%;
+    --bubble-patient-text: 191 70% 21%;
+
+    /* Tab  */
+    --tab-selected-onInset: 187 4% 92%;
+    --tab-selected-onSurface: 192 2% 96%;
+
+    --radius: 1.5rem;
+  }
+
+  .dark {
+    /* Content */
+    --content-primary: 0 0% 100%;
+    --content-accent: 191 76% 31%;
+    --content-secondary: 192 14% 64%;
+    --content-tertiary: 191 12% 56%;
+    --content-disabled: 191 12% 35%;
+    --content-onDark: 0 0% 100%;
+
+    /* Button */
+    --button-primary-background: 191 76% 31%;
+    --button-primary-content: 0 0% 100%;
+    --button-secondary-background: 189 13% 10%;
+    --button-secondary-content: 0 0% 100%;
+    --button-disabled-background: 189 13% 10%;
+    --button-disabled-content: 191 12% 35%;
+    --button-tiny-close-background: 0 0% 100%;
+    --button-tiny-close-content: 0 0% 100%;
+
+    /* Utility */
+    --negative: 352 83% 62%;
+    --positive: 136 85% 71%;
+    --warning: 49 98% 60%;
+
+    /* Border */
+    --border: 190 14% 17%;
+    --border-onLight: 192 14% 7%;
+    --border-onDark: 0 0% 100%;
+    /* Brand */
+    --brand-teal: 191 76% 31%;
+    --brand-orange: 26 86% 53%;
+    --brand-teal-deemph: 192 34% 79%;
+    /* Background */
+    --background-surface: 192 14% 7%;
+    --background-inset: 189 13% 10%;
+    /* Bubble */
+    --bubble-patient-background: 191 41% 11%;
+    --bubble-patient-text: 191 34% 65%;
+
+    /* 
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%; */
+  }
+}
+
+@layer utilities {
+  .chatMarkdown2 ul {
+    @apply list-disc text-left pl-4 -mt-5 -mb-4;
+  }
+  .chatMarkdown2 ul li {
+    @apply text-left leading-6 !important;
+  }
+
+  .chatMarkdown2 ol {
+    @apply list-none text-left pl-4 -mt-6 -mb-6;
+  }
+
+  .chatMarkdown2 ol > li {
+    /* @apply -mt-2 -mb-6; */
+    @apply flex flex-row items-start mt-2 mb-2;
+  }
+
+  .chatMarkdown2 ol > li::marker {
+    @apply text-left mr-2 font-bold;
+  }
+  .chatMarkdown2 ol > li::before {
+    content: counter(list-item) ".";
+    counter-increment: list-item;
+    /* Align the number with the top of the text */
+    display: flex;
+    align-items: flex-start;
+    /* Adjust top margin as needed to align with the first line of the text */
+    /* margin-top: 0.3em; */
+    margin-right: 0.5rem; /* Adjust space between the number and the text */
+    font-weight: bold;
+  }
+
+  .chatMarkdown2 ol ul li {
+    @apply -mt-4;
+  }
+
+  /* .chatMarkdown2 ol > li > ul {
+    @apply pl-4 flex flex-col;
+  } */
+
+  .chatMarkdown2 li {
+    @apply text-left leading-6 mt-0;
+  }
+}
+
+@layer utilities {
+  /* Spacing between all elements */
+  .chatMarkdown > :is(p, h1, h2, h3, h4, h5, h6, div, table):not(:first-child) {
+    @apply mt-4;
+  }
+
+  /* unordered list styling */
+
+  .chatMarkdown > ul {
+    @apply list-disc text-left pl-8 mt-6 mb-6;
+  }
+  .chatMarkdown ul li {
+    @apply text-left leading-6 mt-3 pl-1;
+  }
+  .chatMarkdown ul > li > ul {
+    @apply list-disc text-left pl-6 mb-6;
+  }
+
+  /* ordered list styling */
+  .chatMarkdown ol {
+    @apply list-decimal text-left pl-8 mt-6 mb-6;
+  }
+  .chatMarkdown ol li {
+    @apply text-left leading-6 mt-3 pl-2;
+  }
+
+  .chatMarkdown ol > li > ul {
+    @apply list-disc text-left pl-6 mb-6;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background-surface text-content-primary;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .no-scrollbar {
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+}
