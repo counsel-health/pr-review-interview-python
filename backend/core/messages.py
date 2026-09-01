@@ -9,13 +9,16 @@ written consistently and that the UI always sees the same ``ApiMessage`` shape.
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 from django.db.models import Max
 
 from core.clock import now_ms
 from core.dto import ApiMessage, UserRole
 from core.models import Message
-from core.threads import record_message_for_metadata
+from core.threads import get_thread_metadata, set_thread_metadata
 from core.users import resolve_role
+from jobs.queue import send_message as enqueue_job
 
 
 def to_api(row: Message) -> ApiMessage:
@@ -81,13 +84,27 @@ def append_message(
     return to_api(row)
 
 
-def send_message(thread_id: str, user_id: str, text: str) -> ApiMessage:
+class SendMessageResult(TypedDict):
+    """
+    What :func:`send_message` hands back: the message it inserted plus the
+    thread's unread count after the insert.
+
+    camelCase keys, like the DTOs in ``core/dto.py``, because this is
+    serialized straight through to the client.
+    """
+
+    message: ApiMessage
+    unreadCount: int
+
+
+def send_message(thread_id: str, user_id: str, text: str) -> SendMessageResult:
     """
     Send a message to a thread on behalf of a user.
 
     Resolves the author's role (patient vs physician) before delegating to
-    :func:`append_message`. This is the orchestration the UI calls into via the
-    REST layer.
+    :func:`append_message`, then runs the shared side-effect hook so the in-app
+    and webhook paths behave identically. This is the orchestration the UI calls
+    into via the REST layer.
 
     Not to be confused with ``jobs.queue.send_message``, which enqueues a
     background job. This one is a chat message.
@@ -99,6 +116,35 @@ def send_message(thread_id: str, user_id: str, text: str) -> ApiMessage:
         author_role=role,
         text=text,
     )
-    # Patient messages bump the unresponded counter; a physician reply clears it.
-    record_message_for_metadata(thread_id, role)
-    return message
+    unread_count = on_message_appended(thread_id, message)
+    # Hand the message back together with the thread's updated unread count.
+    return {"message": message, "unreadCount": unread_count}
+
+
+def on_message_appended(thread_id: str, message: ApiMessage) -> int:
+    """
+    Shared "a message was appended" hook.
+
+    Called by both the in-app send path and the inbound Relay webhook so the
+    side effects of a new message live in one place instead of being duplicated
+    per entry point: bump the unread counter, kick off a fresh summary, and
+    notify the care team.
+
+    Returns the thread's unread count after the bump.
+    """
+    # A new message landed, so the thread is unread for the care team again and
+    # the response clock restarts. Read the current count, add one, write it back.
+    metadata = get_thread_metadata(thread_id)
+    metadata["unrespondedPatientMessagesCount"] += 1
+    set_thread_metadata(thread_id, metadata)
+
+    # Queue a fresh summary for the thread now that it has a new message.
+    enqueue_job("refresh_summary", {"threadId": thread_id})
+
+    # Ping the care team about the new message.
+    enqueue_job(
+        "notify_care_team",
+        {"threadId": thread_id, "messageId": message["id"]},
+    )
+
+    return metadata["unrespondedPatientMessagesCount"]

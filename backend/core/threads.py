@@ -21,7 +21,7 @@ from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, QuerySet
 
 from core.clock import now_ms
-from core.dto import ApiThread, ThreadMetadata, UserRole
+from core.dto import ApiThread, ThreadMetadata
 from core.models import Message, Thread, ThreadPhysician
 from core.users import resolve_role
 
@@ -168,18 +168,3 @@ def get_thread_metadata(thread_id: str) -> ThreadMetadata:
 
 def set_thread_metadata(thread_id: str, metadata: ThreadMetadata) -> None:
     Thread.objects.filter(id=thread_id).update(metadata=metadata)
-
-
-def record_message_for_metadata(thread_id: str, role: UserRole) -> None:
-    """
-    Update a thread's unresponded-patient counter after a new message.
-
-    Patient messages increment the count; a physician reply resets it to 0.
-    This is the only place the counter moves — see docs/PRODUCT.md, "Inbound
-    and the work queue".
-    """
-    metadata = get_thread_metadata(thread_id)
-    metadata["unrespondedPatientMessagesCount"] = (
-        metadata["unrespondedPatientMessagesCount"] + 1 if role == "patient" else 0
-    )
-    set_thread_metadata(thread_id, metadata)

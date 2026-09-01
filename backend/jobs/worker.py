@@ -20,6 +20,8 @@ import time
 from types import FrameType
 from typing import Any, Callable
 
+from jobs.handlers.notify_care_team import handle_notify_care_team
+from jobs.handlers.refresh_summary import handle_refresh_summary
 from jobs.handlers.summarize_thread import handle_summarize_thread
 from jobs.queue import ReceivedJob, delete_message, receive_messages, release_message
 
@@ -31,6 +33,8 @@ JobHandler = Callable[[Any], None]
 #: Add new job types here.
 HANDLERS: dict[str, JobHandler] = {
     "summarize_thread": handle_summarize_thread,
+    "refresh_summary": handle_refresh_summary,
+    "notify_care_team": handle_notify_care_team,
 }
 
 BATCH_SIZE = 5

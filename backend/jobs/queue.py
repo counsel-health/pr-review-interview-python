@@ -12,7 +12,7 @@ maps 1:1 onto the real queue Counsel uses in production:
 At-least-once delivery is real here: if a worker fails to call
 :func:`delete_message` before the visibility timeout expires, the job becomes
 visible again and another :func:`receive_messages` call will return it.
-**Handlers must be idempotent** — see ``jobs/handlers/summarize_thread.py``.
+**Handlers must be idempotent.**
 
 Note the name collision with ``core.messages.send_message``: that one sends a
 chat message to a thread, this one enqueues a background job. They are

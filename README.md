@@ -74,6 +74,12 @@ Run from `backend/`, prefixed with `uv run python manage.py`.
   with `migrate` to rebuild from scratch.
 - `sanity_test` — exercise the domain layer and job queue end to end without a
   browser.
+- `backfill_summaries` — generate a summary for every thread that doesn't have
+  one yet. One-off; safe to re-run.
+- `relay_send` — POST a signed sample inbound Relay webhook at the local app so
+  the whole inbound flow can be exercised offline. Needs `runserver` up and
+  `RELAY_WEBHOOK_SECRET` set to the same value on both sides. Takes `--thread`,
+  `--from`, `--text`, `--delivery-id`, and `--concurrent`.
 
 There is also `uv run python scripts/build_seed.py <0001_init.sql>`, which
 regenerates the committed seed fixture from the legacy SQL dump. The fixture

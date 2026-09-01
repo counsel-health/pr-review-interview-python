@@ -11,6 +11,8 @@ its message list.
 
 from __future__ import annotations
 
+from typing import cast
+
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -18,6 +20,7 @@ from rest_framework.views import APIView
 
 from api.exceptions import error_response
 from api.serializers import SendMessageSerializer
+from core.dto import ApiMessage
 from core.messages import list_thread_messages, send_message
 
 
@@ -37,9 +40,12 @@ class ThreadMessagesView(APIView):
         payload = serializer.validated_data
 
         try:
-            inserted = send_message(thread_id, payload["userId"], payload["message"])
+            result = send_message(thread_id, payload["userId"], payload["message"])
         except Exception as exc:
             return error_response(
                 "send_message_failed", str(exc), status.HTTP_400_BAD_REQUEST
             )
+        # send_message also reports the thread's unread count now; the response
+        # body stays the inserted message the client appends to its list.
+        inserted = cast(ApiMessage, result)
         return Response(inserted, status=status.HTTP_201_CREATED)

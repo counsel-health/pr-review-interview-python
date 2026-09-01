@@ -38,10 +38,18 @@ def default_thread_metadata() -> dict[str, Any]:
 class Patient(models.Model):
     id = models.TextField(primary_key=True)
     name = models.TextField()
+    #: Contact address Relay routes inbound messages by. Nullable because a
+    #: patient who has never registered a number simply doesn't have one.
+    phone = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "patients"
+        constraints = [
+            # One patient per number: the webhook resolves an inbound `from`
+            # address to a single patient.
+            models.UniqueConstraint(fields=["phone"], name="patients_phone_idx"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.name} ({self.id})"
@@ -146,6 +154,9 @@ class Message(models.Model):
     timestamp = models.BigIntegerField()
     #: Position within the thread, dense and 0-based.
     msg_index = models.IntegerField()
+    #: Relay's delivery id, for messages that arrived through the provider.
+    #: Messages sent from inside the app carry ''.
+    provider_message_id = models.TextField(default="")
 
     class Meta:
         db_table = "messages"
