@@ -52,7 +52,11 @@ patients = Table(
     metadata_obj,
     Column("id", Text, primary_key=True),
     Column("name", Text, nullable=False),
+    # Contact address Relay routes inbound messages by. Nullable: a patient who
+    # has never given us a number simply has none on file.
+    Column("phone", Text, nullable=True),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Index("patients_phone_idx", "phone", unique=True),
 )
 
 physicians = Table(
@@ -109,6 +113,9 @@ messages = Table(
     Column("timestamp", BigInteger, nullable=False),
     # Position within the thread, dense and 0-based.
     Column("msg_index", Integer, nullable=False),
+    # Relay's delivery id for an inbound message. Messages that did not come in
+    # through Relay carry ''.
+    Column("provider_message_id", Text, nullable=False, server_default=text("''")),
     # A thread's message ordering is a real invariant, not just a convention:
     # two writers racing to claim the same index must not both succeed.
     UniqueConstraint("thread_id", "msg_index", name="messages_thread_id_msg_index_key"),
